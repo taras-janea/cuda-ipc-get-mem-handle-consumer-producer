@@ -99,6 +99,14 @@ void producer(int tensor_pipe_write, int producer_done_write,
           d_ptr, sizes,
           torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0));
 
+      // Fill tensor with data
+      cudaMemcpy(d_ptr, data, sizeof(data), cudaMemcpyHostToDevice);
+
+      {
+        std::cout << "#" << i << ": Tensor to send before cudaIpcGetMemHandle: "
+                  << gpu_tensor << std::endl;
+      }
+
       // Get IPC handle
       cudaIpcMemHandle_t handle;
       err = cudaIpcGetMemHandle(&handle, gpu_tensor.data_ptr());
@@ -108,9 +116,6 @@ void producer(int tensor_pipe_write, int producer_done_write,
            << " for tensor at " << gpu_tensor.data_ptr();
         throw std::runtime_error(ss.str());
       }
-
-      // Fill tensor with data
-      cudaMemcpy(d_ptr, data, sizeof(data), cudaMemcpyHostToDevice);
 
       {
         std::cout << "#" << i << ": Tensor to send after cudaIpcGetMemHandle: "
